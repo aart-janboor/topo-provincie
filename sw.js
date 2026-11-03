@@ -1,14 +1,16 @@
 /* Service worker voor de provincie-app (eigen repo/scope /topo-provincie/).
  * Nieuwe versie wacht tot er op het update-balkje wordt getikt (SKIP_WAITING). */
-var CACHE = "topo-provincie-v2";
+var CACHE = "topo-provincie-v3";
 var ASSETS = [
   "./",
   "./index.html",
   "./css/style.css",
   "./js/data.js",
+  "./js/data-noord.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./assets/kaart.jpg",
+  "./assets/NoordNederland1.jpg",
   "./assets/icon-192.png",
   "./assets/icon-512.png"
 ];

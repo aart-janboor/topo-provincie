@@ -15,7 +15,23 @@ body {
 }
 .topbar b { font-size: 18px; }
 .topbar .back, .topbar .sp { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; }
-.topbar .back { background: rgba(255,255,255,.25); border-radius: 12px; color: #fff; text-decoration: none; font-size: 20px; }
+.topbar .back { background: rgba(255,255,255,.25); border-radius: 12px; color: #fff; text-decoration: none; font-size: 20px; border: none; padding: 0; font-family: inherit; cursor: pointer; }
+
+/* Keuzescherm: West- of Noord-Nederland */
+.kies-titel { margin: 4px 0 0; font-size: 24px; color: #2e9e7a; text-align: center; }
+.kaarten { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 600px) { .kaarten { grid-template-columns: 1fr; } }
+.regiokaart {
+  font: inherit; cursor: pointer; text-align: center; color: #233a33;
+  display: flex; flex-direction: column; gap: 6px; padding: 10px;
+  background: #f2fbf7; border: 3px solid #cfe9dd; border-radius: 18px;
+  box-shadow: 0 5px 0 rgba(0,0,0,.08);
+}
+.regiokaart:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0,0,0,.08); }
+.regiokaart .thumb { display: block; height: 180px; overflow: hidden; border-radius: 12px; background: #dfeefc; }
+.regiokaart .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rk-naam { font-size: 20px; font-weight: bold; color: #2e9e7a; }
+.rk-info { font-size: 14px; color: #5d7a70; }
 
 .screen { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
 

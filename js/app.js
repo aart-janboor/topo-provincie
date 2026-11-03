@@ -8,19 +8,53 @@
 (function () {
   "use strict";
 
-  var DATA = window.TOPO_DATA;
   var app = document.getElementById("app");
 
-  // Volgorde waarin we de groepen tonen. Eerst de vier provincies, dan de
-  // wateren en gebieden (die staan met Romeinse cijfers/letters op de kaart).
-  var ORDER = ["noord-holland", "zuid-holland", "utrecht", "zeeland", "water", "gebied"];
-  var GROEP_EMOJI = {
-    "noord-holland": "🌷", "zuid-holland": "🚢", "utrecht": "🗼",
-    "zeeland": "🦪", "water": "🌊", "gebied": "🗺️"
-  };
+  // ---- de gebieden die je kunt oefenen ----
+  // Elk gebied heeft eigen data, kaart en groepen. 'order' = volgorde waarin we de
+  // groepen tonen: eerst de provincies, dan de wateren en gebieden (die staan met
+  // Romeinse cijfers/letters op de kaart). 'prefix' houdt bewaarde volgordes en
+  // liedjes per gebied gescheiden; West heeft geen prefix, zodat wat al bewaard
+  // was gewoon blijft werken. Een gebied zonder data (script niet geladen) valt weg.
+  var REGIOS = [
+    {
+      id: "west", naam: "West-Nederland", emoji: "🌷", data: window.TOPO_DATA,
+      kaart: "assets/kaart.jpg", prefix: "", ouderLabels: true,
+      order: ["noord-holland", "zuid-holland", "utrecht", "zeeland", "water", "gebied"],
+      groepEmoji: {
+        "noord-holland": "🌷", "zuid-holland": "🚢", "utrecht": "🗼",
+        "zeeland": "🦪", "water": "🌊", "gebied": "🗺️"
+      }
+    },
+    {
+      id: "noord", naam: "Noord-Nederland", emoji: "🐄", data: window.TOPO_NOORD,
+      kaart: "assets/NoordNederland1.jpg", prefix: "noord:", ouderLabels: false,
+      order: ["friesland", "groningen", "drenthe", "water", "gebied"],
+      groepEmoji: {
+        "friesland": "🐄", "groningen": "🌾", "drenthe": "🪨",
+        "water": "🌊", "gebied": "🏝️"
+      }
+    }
+  ].filter(function (r) { return r.data; });
 
-  // Alleen groepen die echt in de data zitten.
-  var groepen = ORDER.filter(function (k) { return DATA.regios && DATA.regios[k]; });
+  // Het gebied waar we nu in oefenen; null = keuzescherm.
+  var regio = null, DATA = null, groepen = [], GROEP_EMOJI = {};
+
+  function kies(id) {
+    var r = null;
+    REGIOS.forEach(function (x) { if (x.id === id) r = x; });
+    regio = r;
+    if (!r) { DATA = null; groepen = []; GROEP_EMOJI = {}; return; }
+    DATA = r.data;
+    GROEP_EMOJI = r.groepEmoji;
+    groepen = r.order.filter(function (k) { return DATA.regios && DATA.regios[k]; });
+    var i = ui.idx[id];
+    ui.groepIdx = (typeof i === "number" && i >= 0 && i < groepen.length) ? i : 0;
+    ui.gespiekt = {}; ui.sorteerModus = false;
+  }
+  // Sleutel voor bewaarde volgorde en liedje van een groep in het huidige gebied.
+  function sleutel(groep) { return regio.prefix + groep; }
+  function huidigeSleutel() { return regio ? sleutel(groepen[ui.groepIdx]) : null; }
 
   // ---- label-overrides uit de hoofd-app (zelfde origin) ----
   var overrides = {};
@@ -30,7 +64,7 @@
   } catch (e) { overrides = {}; }
 
   function labelOf(item) {
-    var o = overrides[item.id];
+    var o = regio.ouderLabels ? overrides[item.id] : null;
     if (o && typeof o.label === "string") return o.label;
     return item.label;
   }
@@ -41,17 +75,17 @@
   // op de nummervolgorde).
   function itemsVan(groep) {
     var lijst = DATA.items.filter(function (it) { return it.regio === groep && labelOf(it).trim() !== ""; });
-    var ord = ui.volgorde[groep];
+    var ord = ui.volgorde[sleutel(groep)];
     if (ord && ord.length) {
       var pos = {};
       ord.forEach(function (id, i) { pos[id] = i; });
       lijst.sort(function (a, b) {
         var pa = (a.id in pos) ? pos[a.id] : 1e6, pb = (b.id in pos) ? pos[b.id] : 1e6;
         if (pa !== pb) return pa - pb;
-        return sortKey(labelOf(a)) - sortKey(labelOf(b));
+        return sortKey(a) - sortKey(b);
       });
     } else {
-      lijst.sort(function (a, b) { return sortKey(labelOf(a)) - sortKey(labelOf(b)); });
+      lijst.sort(function (a, b) { return sortKey(a) - sortKey(b); });
     }
     return lijst;
   }
@@ -61,20 +95,22 @@
     var i = ids.indexOf(id), j = i + delta;
     if (i < 0 || j < 0 || j >= ids.length) return;
     ids.splice(i, 1); ids.splice(j, 0, id);
-    ui.volgorde[groep] = ids;
+    ui.volgorde[sleutel(groep)] = ids;
     bewaar(); render();
   }
   function herstelVolgorde(groep) {
-    delete ui.volgorde[groep];
+    delete ui.volgorde[sleutel(groep)];
     bewaar(); render();
   }
 
-  // Sorteersleutel: "1".."26" -> getal, "I".."X" -> Romeins getal, "A".."G" -> letter.
-  function sortKey(lbl) {
-    lbl = (lbl || "").trim();
+  // Sorteersleutel: cijfer -> getal; bij wateren Romeins getal (andere tekens, zoals
+  // "?", achteraan); bij gebieden de letter. Per categorie, want een letter als "c"
+  // of "d" is ook een geldig Romeins cijfer.
+  function sortKey(item) {
+    var lbl = (labelOf(item) || "").trim();
     if (/^\d+$/.test(lbl)) return parseInt(lbl, 10);
-    if (/^[IVXLCDM]+$/i.test(lbl)) return romanToInt(lbl);
-    return lbl.toUpperCase().charCodeAt(0);
+    if (item.categorie === "water") return /^[IVXLCDM]+$/i.test(lbl) ? romanToInt(lbl) : 1e5;
+    return lbl.toUpperCase().charCodeAt(0) || 1e5;
   }
   function romanToInt(s) {
     var m = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 }, t = 0;
@@ -89,10 +125,12 @@
   // ---- toestand ----
   var PK = "topo-provincies-v1";
   // volgorde = eigen namenvolgorde per groep ({groep: [id,...]}); sorteerModus is sessie-only.
-  var ui = { groepIdx: 0, toonNamen: true, gespiekt: {}, herhaal: true, toonBolletjes: true, volgorde: {}, sorteerModus: false };
+  // idx = laatst bekeken groep per gebied ({west: n, noord: n}).
+  var ui = { groepIdx: 0, idx: {}, toonNamen: true, gespiekt: {}, herhaal: true, toonBolletjes: true, volgorde: {}, sorteerModus: false };
   try {
     var ps = JSON.parse(localStorage.getItem(PK) || "{}");
-    if (typeof ps.groepIdx === "number" && ps.groepIdx >= 0 && ps.groepIdx < groepen.length) ui.groepIdx = ps.groepIdx;
+    if (ps.idx && typeof ps.idx === "object") ui.idx = ps.idx;
+    else if (typeof ps.groepIdx === "number") ui.idx.west = ps.groepIdx; // oude opslag: alleen West bestond
     if (typeof ps.toonNamen === "boolean") ui.toonNamen = ps.toonNamen;
     if (typeof ps.herhaal === "boolean") ui.herhaal = ps.herhaal;
     if (typeof ps.toonBolletjes === "boolean") ui.toonBolletjes = ps.toonBolletjes;
@@ -100,8 +138,9 @@
   } catch (e) {}
   function bewaar() {
     try {
+      if (regio) ui.idx[regio.id] = ui.groepIdx;
       localStorage.setItem(PK, JSON.stringify({
-        groepIdx: ui.groepIdx, toonNamen: ui.toonNamen, herhaal: ui.herhaal,
+        idx: ui.idx, toonNamen: ui.toonNamen, herhaal: ui.herhaal,
         toonBolletjes: ui.toonBolletjes, volgorde: ui.volgorde
       }));
     } catch (e) {}
@@ -124,7 +163,45 @@
     render();
   }
 
+  // ---- keuzescherm: welk deel van Nederland oefenen we? ----
+  function renderKeuze() {
+    app.innerHTML =
+      '<div class="topbar">' +
+        '<a class="back" href="https://aart-janboor.github.io/topo-huisdier/" title="Naar de oefen-app">←</a>' +
+        "<b>Topo per provincie</b>" +
+        '<span class="sp"></span>' +
+      "</div>" +
+      '<div class="screen">' +
+        '<h1 class="kies-titel">Wat wil je oefenen?</h1>' +
+        '<div class="kaarten">' + REGIOS.map(function (r) {
+          var n = r.data.items.filter(function (it) { return (it.label || "").trim() !== ""; }).length;
+          return '<button class="regiokaart" data-id="' + esc(r.id) + '">' +
+            '<span class="thumb"><img src="' + esc(r.kaart) + '" alt="" loading="lazy"></span>' +
+            '<span class="rk-naam">' + r.emoji + " " + esc(r.naam) + "</span>" +
+            '<span class="rk-info">' + n + " namen om te leren</span>" +
+          "</button>";
+        }).join("") + "</div>" +
+      "</div>";
+
+    var kaarten = app.querySelectorAll(".regiokaart");
+    for (var i = 0; i < kaarten.length; i++) {
+      kaarten[i].onclick = function () {
+        kies(this.getAttribute("data-id"));
+        render();
+        window.scrollTo(0, 0);
+      };
+    }
+  }
+
+  function naarKeuze() {
+    stopZingen(); stopAfspelen(); stopOpnameStil();
+    bewaar();
+    kies(null);
+    render();
+  }
+
   function render() {
+    if (!regio) { renderKeuze(); return; }
     var groep = groepen[ui.groepIdx];
     var naam = DATA.regios[groep];
     var items = itemsVan(groep);
@@ -162,8 +239,8 @@
 
     app.innerHTML =
       '<div class="topbar">' +
-        '<a class="back" href="https://aart-janboor.github.io/topo-huisdier/" title="Naar de oefen-app">←</a>' +
-        "<b>Topo per provincie</b>" +
+        '<button class="back" title="Kies een ander gebied">←</button>' +
+        "<b>" + regio.emoji + " " + esc(regio.naam) + "</b>" +
         '<span class="sp"></span>' +
       "</div>" +
 
@@ -188,7 +265,7 @@
             '<div class="maptools">' +
               '<button class="btn bol' + (ui.toonBolletjes ? " on" : "") + '">🔴 Bolletjes: ' + (ui.toonBolletjes ? "aan" : "uit") + "</button>" +
             "</div>" +
-            '<div class="bigmap"><img src="assets/kaart.jpg" alt="kaart van West-Nederland">' + markers + "</div>" +
+            '<div class="bigmap"><img src="' + esc(regio.kaart) + '" alt="kaart van ' + esc(regio.naam) + '">' + markers + "</div>" +
             (!ui.toonBolletjes
               ? '<p class="note">Bolletjes uit — je ziet de kale kaart.</p>'
               : '<p class="note">Tik op een teken op de kaart om die naam even te zien.</p>') +
@@ -227,6 +304,7 @@
   }
 
   function bind(items) {
+    app.querySelector(".back").onclick = naarKeuze;
     app.querySelector(".nav-prev").onclick = function () { ga(-1); };
     app.querySelector(".nav-next").onclick = function () { ga(1); };
 
@@ -385,6 +463,7 @@
       return;
     }
     stopAfspelen();
+    var k = sleutel(groep);
     // Spraak-DSP (echo-onderdrukking, ruisonderdrukking, auto-gain) maakt zang
     // blikkerig — daarom uit. Hogere bitrate + opus = veel betere kwaliteit.
     var constraints = { audio: {
@@ -410,8 +489,8 @@
         var type = mr.mimeType || (rec.chunks[0] && rec.chunks[0].type) || "audio/webm";
         var blob = new Blob(rec.chunks, { type: type });
         stopStream(); rec.mr = null;
-        liedjePut(groep, { blob: blob, mime: type, ts: Date.now() }).then(function () {
-          if (groepHuidig() === groep) laadLiedje(groep);
+        liedjePut(k, { blob: blob, mime: type, ts: Date.now() }).then(function () {
+          if (huidigeSleutel() === k) laadLiedje(groep);
         });
       };
       mr.start();
@@ -447,8 +526,9 @@
   function laadLiedje(groep) {
     var body = document.getElementById("songbody");
     if (!body) return;
-    liedjeGet(groep).then(function (opname) {
-      if (groepHuidig() !== groep) return;
+    var k = sleutel(groep);
+    liedjeGet(k).then(function (opname) {
+      if (huidigeSleutel() !== k) return;
       if (opname && opname.blob) toonSpeler(body, groep, opname);
       else toonOpnemer(body, groep);
     })["catch"](function () { toonOpnemer(body, groep); });
@@ -492,7 +572,8 @@
     body.querySelector(".del").onclick = function () {
       if (!confirm("Dit liedje verwijderen en opnieuw opnemen?")) return;
       stopAfspelen();
-      liedjeDel(groep).then(function () { if (groepHuidig() === groep) laadLiedje(groep); });
+      var k = sleutel(groep);
+      liedjeDel(k).then(function () { if (huidigeSleutel() === k) laadLiedje(groep); });
     };
   }
 
