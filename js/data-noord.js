@@ -6,9 +6,9 @@
  *   - letter a..h   -> gebieden (eilanden, Noordelijke Friese Wouden, Hondsrug)
  *
  * De koppeling naam -> teken is gecontroleerd tegen de kaart zelf. Let op de
- * twee plekken waar het ingevulde werkblad afweek van de kaart:
+ * plek waar het ingevulde werkblad afweek van de kaart:
  *   - Terschelling (het eiland) is b; 5 is het dorp West-Terschelling.
- *   - Rottumeroog is het westelijke eilandje (e), Rottumerplaat het oostelijke (f).
+ *   - Rottumerplaat is e en Rottumeroog is f (bevestigd door de ouder).
  * Twijfel? Pas hieronder het 'label' aan; de app past zich vanzelf aan.
  *
  * coords = positie van het teken op de kaart (0..1, links/boven), afgelezen
@@ -59,8 +59,8 @@ window.TOPO_NOORD = {
     { id: "n-terschelling",     naam: "Terschelling",     categorie: "gebied", regio: "gebied",  label: "b" },
     { id: "n-ameland",          naam: "Ameland",          categorie: "gebied", regio: "gebied",  label: "c" },
     { id: "n-schiermonnikoog",  naam: "Schiermonnikoog (eiland)", categorie: "gebied", regio: "gebied", label: "d" },
-    { id: "n-rottumeroog",      naam: "Rottumeroog",      categorie: "gebied", regio: "gebied",  label: "e" },
-    { id: "n-rottumerplaat",    naam: "Rottumerplaat",    categorie: "gebied", regio: "gebied",  label: "f" },
+    { id: "n-rottumeroog",      naam: "Rottumeroog",      categorie: "gebied", regio: "gebied",  label: "f" },
+    { id: "n-rottumerplaat",    naam: "Rottumerplaat",    categorie: "gebied", regio: "gebied",  label: "e" },
     { id: "n-noordelijke-friese-wouden", naam: "Noordelijke Friese Wouden", categorie: "gebied", regio: "gebied", label: "g" },
     { id: "n-hondsrug",         naam: "Hondsrug",         categorie: "gebied", regio: "gebied",  label: "h" }
   ],
@@ -81,8 +81,8 @@ window.TOPO_NOORD = {
 
     // gebieden
     "n-vlieland": [0.050, 0.346], "n-terschelling": [0.234, 0.186], "n-ameland": [0.419, 0.149],
-    "n-schiermonnikoog": [0.590, 0.111], "n-rottumeroog": [0.676, 0.074],
-    "n-rottumerplaat": [0.723, 0.062], "n-noordelijke-friese-wouden": [0.419, 0.496],
+    "n-schiermonnikoog": [0.590, 0.111], "n-rottumeroog": [0.723, 0.062],
+    "n-rottumerplaat": [0.676, 0.074], "n-noordelijke-friese-wouden": [0.419, 0.496],
     "n-hondsrug": [0.819, 0.654]
   }
 };
