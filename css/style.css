@@ -19,8 +19,7 @@ body {
 
 /* Keuzescherm: West- of Noord-Nederland */
 .kies-titel { margin: 4px 0 0; font-size: 24px; color: #2e9e7a; text-align: center; }
-.kaarten { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media (max-width: 600px) { .kaarten { grid-template-columns: 1fr; } }
+.kaarten { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
 .regiokaart {
   font: inherit; cursor: pointer; text-align: center; color: #233a33;
   display: flex; flex-direction: column; gap: 6px; padding: 10px;

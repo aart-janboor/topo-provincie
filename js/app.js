@@ -35,6 +35,13 @@
         "water": "🌊", "gebied": "🏝️"
       }
     }
+    ,
+    {
+      id: "bekend", naam: "Bekende plekken", emoji: "⭐", data: window.TOPO_BEKEND,
+      kaart: "assets/BekendePlekken.jpg", prefix: "bekend:", ouderLabels: false,
+      order: ["deel-1", "deel-2"],
+      groepEmoji: { "deel-1": "1️⃣", "deel-2": "2️⃣" }
+    }
   ].filter(function (r) { return r.data; });
 
   // Het gebied waar we nu in oefenen; null = keuzescherm.
@@ -109,7 +116,7 @@
   function sortKey(item) {
     var lbl = (labelOf(item) || "").trim();
     if (/^\d+$/.test(lbl)) return parseInt(lbl, 10);
-    if (item.categorie === "water") return /^[IVXLCDM]+$/i.test(lbl) ? romanToInt(lbl) : 1e5;
+    if (item.categorie === "water" || item.categorie === "plek") return /^[IVXLCDM]+$/i.test(lbl) ? romanToInt(lbl) : 1e5;
     return lbl.toUpperCase().charCodeAt(0) || 1e5;
   }
   function romanToInt(s) {

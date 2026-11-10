@@ -1,7 +1,7 @@
 # Topo per provincie 🎵
 
-Losse PWA om de topografie van **West-Nederland** en **Noord-Nederland** per
-provincie te oefenen (je kiest eerst welk deel):
+Losse PWA om de topografie van **West-Nederland**, **Noord-Nederland** en de
+**Bekende plekken** (in Deel 1 en Deel 2) te oefenen (je kiest eerst welk deel):
 kaart links, namenlijst rechts (tonen/verbergen), bladeren per provincie, en
 jullie eigen **liedje opnemen** + afspelen (met herhaal). De namenvolgorde kun
 je aanpassen en wordt onthouden.
